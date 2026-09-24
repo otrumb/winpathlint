@@ -3,12 +3,18 @@ name: Windows release
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -18,14 +24,17 @@ jobs:
     env:
       CGO_ENABLED: '0'
       GIT_MASTER: '1'
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     defaults:
       run:
         shell: pwsh
     steps:
+      - name: Validate release tag
+        run: |
+          if ($env:RELEASE_TAG -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid release tag' }
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.sha }}
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
@@ -65,7 +74,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:RELEASE_TAG -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') { throw 'Invalid release tag' }
@@ -76,22 +85,23 @@ jobs:
             $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $asset).Hash.ToLowerInvariant()
             if ($manifest -cnotcontains "$hash  $([IO.Path]::GetFileName($asset))") { throw "Checksum mismatch: $asset" }
           }
-          $releaseJson = gh api "repos/$env:GH_REPO/releases/tags/$env:RELEASE_TAG" 2>&1
-          $releaseStatus = $LASTEXITCODE
-          if ($releaseStatus -eq 0) {
-            try { $release = $releaseJson | ConvertFrom-Json } catch { throw "Could not parse existing release response: $releaseJson" }
-            if (-not $release.draft) { throw "Release $env:RELEASE_TAG is already published; refusing overwrite" }
-            $releaseId = [string]$release.id
-          } elseif ($releaseJson -match '\(HTTP 404\)|HTTP 404') {
+          function Get-Release {
+            $releaseJson = gh api "repos/$env:GH_REPO/releases?per_page=100" --paginate --slurp
+            if ($LASTEXITCODE -ne 0) { throw "Could not list releases (gh api exit code $LASTEXITCODE)" }
+            $pages = $releaseJson | ConvertFrom-Json
+            $releases = @(foreach ($page in $pages) { foreach ($item in $page) { if ($item.tag_name -ceq $env:RELEASE_TAG) { $item } } })
+            if ($releases.Count -gt 1) { throw "Multiple releases match $env:RELEASE_TAG" }
+            $releases
+          }
+          $release = Get-Release
+          if (-not $release) {
             gh release create $env:RELEASE_TAG --verify-tag --draft --title $env:RELEASE_TAG --generate-notes
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            $releaseJson = gh api "repos/$env:GH_REPO/releases/tags/$env:RELEASE_TAG"
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            try { $release = $releaseJson | ConvertFrom-Json } catch { throw "Could not parse created release response: $releaseJson" }
-            $releaseId = [string]$release.id
-          } else {
-            throw "Could not inspect release $env:RELEASE_TAG (gh api exit code $releaseStatus): $releaseJson"
+            $release = Get-Release
+            if (-not $release) { throw 'Created release missing from listing' }
           }
+          if (-not $release.draft) { throw "Release $env:RELEASE_TAG is already published; refusing overwrite" }
+          $releaseId = [string]$release.id
           foreach ($asset in @($assets + 'release/SHA256SUMS')) {
             gh release upload $env:RELEASE_TAG $asset --clobber
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

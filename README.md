@@ -158,14 +158,26 @@ versions and existing output directories rather than overwriting artifacts.
 ZIP timestamps are fixed; builds omit local paths and VCS metadata. Repeatability
 is checked within the same Go/.NET toolchain, not promised across toolchain versions.
 
-The release workflow runs only on pushed `v*.*.*` tags, validates strict `vX.Y.Z`
-versions, checks out the event's exact SHA, runs quality gates and packaging checks,
+The release workflow runs on pushed `v*.*.*` tags or manual dispatch with a `tag`
+input. It validates strict `vX.Y.Z` versions, checks out the event's exact SHA
+(or the existing tag on manual dispatch), runs quality gates and packaging checks,
 then publishes the three verified assets. Build has read-only permissions; only
 the separate publish job can write releases. If no release exists, publish creates
 a draft. If a draft exists, reruns reuse it and replace the exact three assets
 before verifying them and publishing. A published release blocks reruns; the
 workflow never overwrites or deletes releases. Local checks never create a
 remote, tag, or release.
+
+Release discovery uses the paginated releases list, including drafts, matched by
+`tag_name`; the release-by-tag REST endpoint excludes drafts. Test the actual
+workflow lookup locally without network access: `./scripts/test-release.ps1`.
+
+For the failed v0.2.0 run, push the workflow fix to `main`, then manually run
+**Windows release** from `main` with `tag` set to `v0.2.0`. This uses the fixed
+workflow while building the unchanged tag at `e15580f`. Do not move the tag or
+delete its draft. Rerunning the original failed run would reuse its old workflow,
+not this fix. After recovery, verify both ZIPs and `SHA256SUMS` on the published
+release. A later rerun intentionally refuses to overwrite that published release.
 
 ## License
 
