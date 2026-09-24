@@ -4,8 +4,47 @@ Read-only Windows checkout compatibility audit for **every Git-index tracked
 path**, not just staged changes. Small Go CLI, standard library only. No network
 access, hooks, renames, working-tree writes, or external Go dependencies.
 
-Intended initial release: **v0.1.0**. No public repository or release is required
-to build locally. Requires Go 1.24+ to build and Git on PATH to run.
+Requires Git on PATH to run. Source builds require Go 1.24+.
+
+## Install v0.2.0 (PowerShell)
+
+The commands below target **v0.2.0**, available after its tag and release are
+published. Preparing this repository locally does not publish either.
+
+### Download a Windows binary
+
+Open [the v0.2.0 release](https://github.com/otrumb/winpathlint/releases/tag/v0.2.0)
+and download `SHA256SUMS` plus one ZIP into the same directory:
+
+- `winpathlint_v0.2.0_windows_amd64.zip` for x64 Windows.
+- `winpathlint_v0.2.0_windows_arm64.zip` for ARM64 Windows.
+
+Verify before extracting; change `$archive` for ARM64:
+
+```powershell
+$archive = 'winpathlint_v0.2.0_windows_amd64.zip'
+$hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant()
+if (@(Get-Content -LiteralPath SHA256SUMS) -cnotcontains "$hash  $archive") {
+    throw 'Checksum mismatch: do not extract or run this download'
+}
+Expand-Archive -LiteralPath $archive -DestinationPath .\winpathlint-v0.2.0
+.\winpathlint-v0.2.0\winpathlint.exe --help
+.\winpathlint-v0.2.0\winpathlint.exe --repo 'C:\src\my-project' --format json
+```
+
+Each ZIP contains `winpathlint.exe` and `LICENSE` at its root. Optionally add
+the extracted directory to your user PATH. Checksums detect damaged or changed
+downloads; they are not signatures or independent proof of publisher identity.
+
+### Install with Go
+
+```powershell
+$env:CGO_ENABLED = '0'
+go install github.com/otrumb/winpathlint@v0.2.0
+```
+
+Go installs into `GOBIN`, or `bin` under `GOPATH` when `GOBIN` is unset (normally
+`$HOME\go\bin`). Add that directory to PATH, then run `winpathlint --help`.
 
 ## Build and run (PowerShell)
 
@@ -102,9 +141,30 @@ invalid arguments, writer failures, corrupt indexes, and built-binary exits.
 Race instrumentation is deliberately excluded: it requires cgo on Windows and
 this project has a no-cgo contract. CI runs Windows checks with pinned actions.
 
-Before publishing v0.1.0, choose the public repository/module location, run these
-checks in a clean checkout, and review license ownership. This local project
-does not create a remote, tag, or release.
+### Local release packaging
+
+From the repository root, use a new output directory whose parent exists:
+
+```powershell
+$output = Join-Path $env:TEMP ('winpathlint-' + [guid]::NewGuid())
+.\scripts\test-package.ps1 -Version v0.2.0 -OutputDirectory $output
+```
+
+This builds Windows amd64 and arm64 with `CGO_ENABLED=0`, verifies ZIP members,
+license bytes, PE architectures and SHA256 checksums, then repeats both builds
+to check identical archive hashes. Output contains both ZIPs and `SHA256SUMS`.
+`scripts/package.ps1` is the shared local/workflow packager. It rejects invalid
+versions and existing output directories rather than overwriting artifacts.
+ZIP timestamps are fixed; builds omit local paths and VCS metadata. Repeatability
+is checked within the same Go/.NET toolchain, not promised across toolchain versions.
+
+The release workflow runs only on pushed `v*.*.*` tags, validates strict `vX.Y.Z`
+versions, checks out the event's exact SHA, runs quality gates and packaging checks,
+then publishes the three verified assets. Build has read-only permissions; only
+the separate publish job can write releases. Failed uploads leave a draft rather
+than an incomplete public release. Existing releases are not overwritten; inspect
+and resolve a failed draft before rerunning. Local checks never create a remote,
+tag, or release.
 
 ## License
 
