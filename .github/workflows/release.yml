@@ -76,7 +76,34 @@ jobs:
             $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $asset).Hash.ToLowerInvariant()
             if ($manifest -cnotcontains "$hash  $([IO.Path]::GetFileName($asset))") { throw "Checksum mismatch: $asset" }
           }
-          gh release create $env:RELEASE_TAG @assets release/SHA256SUMS --verify-tag --draft --title $env:RELEASE_TAG --generate-notes
+          $releaseJson = gh api "repos/$env:GH_REPO/releases/tags/$env:RELEASE_TAG" 2>&1
+          $releaseStatus = $LASTEXITCODE
+          if ($releaseStatus -eq 0) {
+            try { $release = $releaseJson | ConvertFrom-Json } catch { throw "Could not parse existing release response: $releaseJson" }
+            if (-not $release.draft) { throw "Release $env:RELEASE_TAG is already published; refusing overwrite" }
+            $releaseId = [string]$release.id
+          } elseif ($releaseJson -match '\(HTTP 404\)|HTTP 404') {
+            gh release create $env:RELEASE_TAG --verify-tag --draft --title $env:RELEASE_TAG --generate-notes
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $releaseJson = gh api "repos/$env:GH_REPO/releases/tags/$env:RELEASE_TAG"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            try { $release = $releaseJson | ConvertFrom-Json } catch { throw "Could not parse created release response: $releaseJson" }
+            $releaseId = [string]$release.id
+          } else {
+            throw "Could not inspect release $env:RELEASE_TAG (gh api exit code $releaseStatus): $releaseJson"
+          }
+          foreach ($asset in @($assets + 'release/SHA256SUMS')) {
+            gh release upload $env:RELEASE_TAG $asset --clobber
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          $uploaded = gh api "repos/$env:GH_REPO/releases/$releaseId/assets"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          try { $uploadedAssets = @($uploaded | ConvertFrom-Json) } catch { throw "Could not parse release assets response: $uploaded" }
+          $expectedNames = @($assets | ForEach-Object { [IO.Path]::GetFileName($_) }) + 'SHA256SUMS'
+          $actualNames = @($uploadedAssets | ForEach-Object { $_.name })
+          if (($actualNames | Where-Object { $expectedNames -notcontains $_ }).Count -gt 0 -or
+              ($expectedNames | Where-Object { $actualNames -notcontains $_ }).Count -gt 0) {
+            throw 'Release assets do not exactly match expected assets'
+          }
           gh release edit $env:RELEASE_TAG --draft=false --verify-tag
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

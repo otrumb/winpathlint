@@ -161,10 +161,11 @@ is checked within the same Go/.NET toolchain, not promised across toolchain vers
 The release workflow runs only on pushed `v*.*.*` tags, validates strict `vX.Y.Z`
 versions, checks out the event's exact SHA, runs quality gates and packaging checks,
 then publishes the three verified assets. Build has read-only permissions; only
-the separate publish job can write releases. Failed uploads leave a draft rather
-than an incomplete public release. Existing releases are not overwritten; inspect
-and resolve a failed draft before rerunning. Local checks never create a remote,
-tag, or release.
+the separate publish job can write releases. If no release exists, publish creates
+a draft. If a draft exists, reruns reuse it and replace the exact three assets
+before verifying them and publishing. A published release blocks reruns; the
+workflow never overwrites or deletes releases. Local checks never create a
+remote, tag, or release.
 
 ## License
 
