@@ -6,6 +6,36 @@ access, hooks, renames, working-tree writes, or external Go dependencies.
 
 Requires Git on PATH to run. Source builds require Go 1.24+.
 
+## 30-second quickstart
+
+From a PowerShell checkout, install and scan the repository:
+
+```powershell
+$env:CGO_ENABLED = '0'
+go install github.com/otrumb/winpathlint@v0.2.0
+winpathlint --repo (Get-Location).Path --format json
+$LASTEXITCODE
+```
+
+Interpret the result: `0` means clean, `1` means findings need remediation, and
+`2` means the command or repository could not be processed. For a source checkout
+without Go installation, download the Windows ZIP below, extract it, and run the
+same `winpathlint --repo ... --format json` command.
+
+## CI before/after
+
+The CI job runs the same built CLI as the quickstart after Go tests, vet, and
+build. A concrete remediation looks like this:
+
+```text
+Before remediation: tracked path `NUL.txt` -> JSON rule `reserved_device_name`, exit 1.
+Remediation: rename `NUL.txt` to `nul-report.txt`, stage the rename, and rerun CI.
+After remediation: no findings (`[]`), exit 0; Go test, vet, and build still pass.
+```
+
+The example describes the CLI result and existing `.github/workflows/ci.yml`
+steps. It does not claim that CI changes files or performs remediation.
+
 ## Install v0.2.0 (PowerShell)
 
 The commands below target **v0.2.0**, available after its tag and release are
