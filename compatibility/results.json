@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scanner": {
+    "main_sha": "1acb7e99dca24b18f9b26f6a65340c30d9f8b427",
+    "main_binary_sha256": "98ccbd141bfc362cc1a8162ab4ffdc941ad21e189c70cbb08d53d2fe69381894",
+    "release": "v0.2.0",
+    "release_binary_sha256": "661e079d45d27bc5312d82fcd9c7c260f87f5a11b1b4b4a4c8f643b50f9edc7f",
+    "release_archive_sha256": "f62b31ce689cf765e8b89fe29ace4f107093a2dc52eac9d7479f9f003c234cdb"
+  },
+  "method": {
+    "platform": "native Windows",
+    "max_path": 240,
+    "repetitions": 3,
+    "binaries": 2,
+    "scan_events": 60,
+    "eligible_repositories": 10,
+    "scanned_repositories": 10,
+    "rejected_candidate_scans": 0,
+    "deterministic": true,
+    "release_main_equal": true,
+    "index_and_path_streams_unchanged": true
+  },
+  "adjudication": {
+    "true_positives": 1,
+    "false_positives": 0,
+    "misses": 0,
+    "unresolved": 0,
+    "basis": "Independent NUL-delimited index census applied documented path rules and matched scanner output."
+  },
+  "repositories": [
+    { "repository": "ethereum/go-ethereum", "sha": "81dbc8b6f4f96ececac3e9ec874afdd82a069d41", "tracked_count": 2402, "path_stream_sha256": "7e41217ba7e612e0a4d8d54658d0dd3476900571786fbca81f197eaace9704f8", "max_depth": 8, "max_utf16": 113, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "ethereum/solidity", "sha": "bb8d74bf5b773e1ef25e7ec711a5329388bc21c4", "tracked_count": 11689, "path_stream_sha256": "927e360174ce8f603639cbd77faf699d29b32fd2ad90afb7f0592ac35d6f3519", "max_depth": 8, "max_utf16": 163, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "golang/go", "sha": "38f24c5c4659b7b8f468e5a2544412e9532e55e9", "tracked_count": 15974, "path_stream_sha256": "f661ae951c830fc3f03c904d2f6ffedb7ca6e33558d7818ed6da970dbe8d4ed7", "max_depth": 14, "max_utf16": 105, "over_240": 0, "non_ascii": 2, "findings": [] },
+    { "repository": "mdn/content", "sha": "da614d19956cb816e3289721e079ded286c34a43", "tracked_count": 16294, "path_stream_sha256": "60c61f7a7a58b86f4aabd151dd2a53bcfdc5fad46de1c6ba8d8168cba170f4f9", "max_depth": 12, "max_utf16": 170, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "microsoft/TypeScript", "sha": "21b3aeb3bd376eb1c3ea89963dc8fd7ee341988a", "tracked_count": 66763, "path_stream_sha256": "297577fe9a1c509a6682c51a581cceb044de18494093d4a0d29afcb46189cdce", "max_depth": 11, "max_utf16": 178, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "nicksnyder/go-i18n", "sha": "25acdc761a4201e01b556e27a5cac4dfa2e66f19", "tracked_count": 62, "path_stream_sha256": "7aa84aac151a2b7ac5d90ebf82179ae4b93c7f6db1da067fe4488d708878befa", "max_depth": 4, "max_utf16": 35, "over_240": 0, "non_ascii": 0, "findings": [] },
+    {
+      "repository": "NousResearch/hermes-agent",
+      "sha": "55db6187e59a0abed801e449df676865c1a5b12c",
+      "tracked_count": 9479,
+      "path_stream_sha256": "d83246caf884990e53d5b8640af9e85422f6e9a65c35c2cc4e95dadde24c3ee9",
+      "max_depth": 10,
+      "max_utf16": 159,
+      "over_240": 0,
+      "non_ascii": 0,
+      "findings": [
+        {
+          "path": "contributors/emails/agent@agents-Mac-mini.local",
+          "rule": "case_collision",
+          "component": "contributors/emails/agent@agents-Mac-mini.local",
+          "related": "contributors/emails/agent@Agents-Mac-mini.local",
+          "classification": "true_positive"
+        }
+      ]
+    },
+    { "repository": "psf/requests", "sha": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60", "tracked_count": 130, "path_stream_sha256": "f559c35976a2c90819cceeeba60bc86d08f924f4bf1d7f3fe25e6cf93879af7f", "max_depth": 5, "max_utf16": 41, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "unicode-org/cldr", "sha": "396355a8aa317fade56f3a35914d4ea48031a85b", "tracked_count": 9337, "path_stream_sha256": "d29ea959a7e65760980a43095a132c57ed8404fa5a3ed38a008e561ec8962429", "max_depth": 13, "max_utf16": 127, "over_240": 0, "non_ascii": 0, "findings": [] },
+    { "repository": "vitejs/vite", "sha": "ddd0ff1f9d3a8ba97500c7960838aa2708bddf9a", "tracked_count": 2837, "path_stream_sha256": "ab18e1c4b1e0b717d3dc418dfb39fcb5deb06157fc03ac79613fd874f7825225", "max_depth": 12, "max_utf16": 120, "over_240": 0, "non_ascii": 7, "findings": [] }
+  ]
+}
