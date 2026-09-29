@@ -3,11 +3,30 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
 )
+
+func TestCompatibilityCorpusTextFilesUseLFOnCheckout(t *testing.T) {
+	paths, err := filepath.Glob("compatibility/*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range paths {
+		path = filepath.ToSlash(path)
+		command := exec.Command("git", "check-attr", "eol", "--", path)
+		command.Env = append(os.Environ(), "GIT_MASTER=1")
+		output, err := command.CombinedOutput()
+		want := path + ": eol: lf\n"
+		if err != nil || string(output) != want {
+			t.Fatalf("checkout policy for %s: %q, %v; want eol=lf", path, output, err)
+		}
+	}
+}
 
 type compatibilityManifest struct {
 	SchemaVersion int `json:"schema_version"`
