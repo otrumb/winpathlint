@@ -155,8 +155,15 @@ try {
         $repository = Join-Path $root "repos/$name"
         $source = if ($OfflineSourceRoot) { Join-Path ([IO.Path]::GetFullPath($OfflineSourceRoot)) ($target.repository -replace '/', '\') } else { [string]$target.source_url }
         if ($OfflineSourceRoot -and -not (Test-Path -LiteralPath $source -PathType Container)) { throw "Offline source missing: $($target.repository)" }
-        $clone = Invoke-Native 'git' @('clone', '--quiet', '--no-checkout', '--no-tags', $source, $repository)
-        if ($clone.ExitCode -ne 0) { throw "Clone failed: $($target.repository): $($utf8.GetString($clone.Stderr))" }
+        if ($OfflineSourceRoot) {
+            $init = Invoke-Native 'git' @('init', '--quiet', $repository)
+            if ($init.ExitCode -ne 0) { throw "Repository init failed: $($target.repository)" }
+            $sourceGit = $utf8.GetString((Invoke-Git $source @('rev-parse', '--absolute-git-dir')).Stdout).Trim()
+            Copy-Item -Path "$sourceGit/objects/*" -Destination "$repository/.git/objects" -Recurse -Force
+        } else {
+            $clone = Invoke-Native 'git' @('clone', '--quiet', '--no-checkout', '--no-tags', $source, $repository)
+            if ($clone.ExitCode -ne 0) { throw "Clone failed: $($target.repository): $($utf8.GetString($clone.Stderr))" }
+        }
         Invoke-Git $repository @('update-ref', 'HEAD', $target.sha) | Out-Null
         Invoke-Git $repository @('read-tree', $target.sha) | Out-Null
         $head = $utf8.GetString((Invoke-Git $repository @('rev-parse', 'HEAD')).Stdout).Trim()

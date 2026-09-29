@@ -107,6 +107,10 @@ switch ($env:FAKE_SCANNER_MODE) {
         Assert-Equal @($group.Group.stdout_sha256 | Select-Object -Unique).Count 1 'Three repeats must match'
     }
     if ($resultText.Contains($sandbox) -or $resultText.Contains($sourceRoot)) { throw 'Results leaked local paths' }
+    $runConfig = [IO.File]::ReadAllText((Join-Path $findingRun 'repos/fixture--alpha/.git/config'))
+    if ($runConfig -match '(?m)^\s*url\s*=' -or (Test-Path -LiteralPath (Join-Path $findingRun 'repos/fixture--alpha/.git/objects/info/alternates'))) {
+        throw 'Offline run retained network or source object dependency'
+    }
     Write-Output 'PASS: exit 1, repeats, Git env, sorting, sanitization, offline sources'
 
     [IO.File]::WriteAllText($counter, '0')
