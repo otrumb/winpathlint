@@ -6,9 +6,9 @@ access, hooks, renames, working-tree writes, or external Go dependencies.
 
 Requires Git on PATH to run. Source builds require Go 1.24+.
 
-## 30-second quickstart
+## 30-second quickstart (v0.2.0)
 
-From a PowerShell checkout, install and scan the repository:
+The current release is **v0.2.0**. From a PowerShell checkout, install and scan the repository:
 
 ```powershell
 $env:CGO_ENABLED = '0'
@@ -18,9 +18,7 @@ $LASTEXITCODE
 ```
 
 Interpret the result: `0` means clean, `1` means findings need remediation, and
-`2` means the command or repository could not be processed. For a source checkout
-without Go installation, download the Windows ZIP below, extract it, and run the
-same `winpathlint --repo ... --format json` command.
+`2` means the command or repository could not be processed.
 
 ## CI before/after
 
@@ -38,8 +36,7 @@ steps. It does not claim that CI changes files or performs remediation.
 
 ## Install v0.2.0 (PowerShell)
 
-The commands below target **v0.2.0**, available after its tag and release are
-published. Preparing this repository locally does not publish either.
+Install the current Windows binary or use Go below.
 
 ### Download a Windows binary
 
@@ -201,13 +198,6 @@ remote, tag, or release.
 Release discovery uses the paginated releases list, including drafts, matched by
 `tag_name`; the release-by-tag REST endpoint excludes drafts. Test the actual
 workflow lookup locally without network access: `./scripts/test-release.ps1`.
-
-For the failed v0.2.0 run, push the workflow fix to `main`, then manually run
-**Windows release** from `main` with `tag` set to `v0.2.0`. This uses the fixed
-workflow while building the unchanged tag at `e15580f`. Do not move the tag or
-delete its draft. Rerunning the original failed run would reuse its old workflow,
-not this fix. After recovery, verify both ZIPs and `SHA256SUMS` on the published
-release. A later rerun intentionally refuses to overwrite that published release.
 
 ## License
 
