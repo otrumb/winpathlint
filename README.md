@@ -6,9 +6,9 @@ access, hooks, renames, working-tree writes, or external Go dependencies.
 
 Requires Git on PATH to run. Source builds require Go 1.24+.
 
-## 30-second quickstart
+## 30-second quickstart (v0.2.0)
 
-From a PowerShell checkout, install and scan the repository:
+The current release is **v0.2.0**. From a PowerShell checkout, install and scan the repository:
 
 ```powershell
 $env:CGO_ENABLED = '0'
@@ -18,9 +18,7 @@ $LASTEXITCODE
 ```
 
 Interpret the result: `0` means clean, `1` means findings need remediation, and
-`2` means the command or repository could not be processed. For a source checkout
-without Go installation, download the Windows ZIP below, extract it, and run the
-same `winpathlint --repo ... --format json` command.
+`2` means the command or repository could not be processed.
 
 ## CI before/after
 
@@ -38,7 +36,7 @@ steps. It does not claim that CI changes files or performs remediation.
 
 ## Install v0.2.0 (PowerShell)
 
-The current release is **v0.2.0**. Install its Windows binary or use Go below.
+Install the current Windows binary or use Go below.
 
 ### Download a Windows binary
 
